@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MindAR Image Tracking</title>
+  <title>MindAR Image Tracking with 3D Model</title>
   <style>
     body, html {
       margin: 0;
@@ -57,7 +57,7 @@
   <!-- Load scripts in the correct order -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.1/dist/mindar-image-three.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.1/dist/mindar-image-three.prod.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -67,32 +67,68 @@
 
       let mindARThree = null;
 
+      function displayError(message) {
+        console.error(message);
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        startButton.style.display = 'block';
+        container.style.display = 'none';
+      }
+
+      function checkLibrariesLoaded() {
+        if (typeof THREE === 'undefined') {
+          throw new Error('Three.js library not loaded');
+        }
+        if (typeof THREE.GLTFLoader === 'undefined') {
+          throw new Error('GLTFLoader not loaded');
+        }
+        if (typeof MINDAR === 'undefined' || typeof MINDAR.IMAGE === 'undefined') {
+          throw new Error('MindAR library not loaded properly');
+        }
+      }
+
       startButton.addEventListener('click', async () => {
         startButton.style.display = 'none';
         container.style.display = 'block';
+        errorMessage.style.display = 'none';
 
         try {
-          // Check if MINDAR is loaded
-          if (typeof MINDAR === 'undefined' || typeof MINDAR.IMAGE === 'undefined') {
-            throw new Error('MindAR library not loaded properly');
-          }
+          checkLibrariesLoaded();
 
           // Initialize MindAR
           mindARThree = new MINDAR.IMAGE.MindARThree({
             container: container,
-            imageTargetSrc: 'marker.mind',
+            imageTargetSrc: '/marker.mind',
           });
 
           const { renderer, scene, camera } = mindARThree;
 
-          // Create a simple cube as a placeholder
-          const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-          const material = new THREE.MeshBasicMaterial({color: 0x00ff00, wireframe: true});
-          const cube = new THREE.Mesh(geometry, material);
+          // Create a light
+          const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+          scene.add(light);
 
-          // Add the cube to an anchor
-          const anchor = mindARThree.addAnchor(0);
-          anchor.group.add(cube);
+          // Load the 3D model
+          const loader = new THREE.GLTFLoader();
+          loader.load(
+            '/model.glb',
+            (gltf) => {
+              const model = gltf.scene;
+              model.scale.set(0.1, 0.1, 0.1);
+              model.position.set(0, 0, 0);
+
+              const anchor = mindARThree.addAnchor(0);
+              anchor.group.add(model);
+
+              console.log('3D model loaded successfully');
+            },
+            (xhr) => {
+              console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            (error) => {
+              console.error('Error loading 3D model:', error);
+              displayError('Failed to load 3D model. Please check the console for details.');
+            }
+          );
 
           // Start AR
           await mindARThree.start();
@@ -104,11 +140,7 @@
 
           console.log('AR session started successfully');
         } catch (error) {
-          console.error('Error starting AR session:', error);
-          errorMessage.textContent = `Error: ${error.message}`;
-          errorMessage.style.display = 'block';
-          startButton.style.display = 'block';
-          container.style.display = 'none';
+          displayError(`Error: ${error.message}`);
         }
       });
     });
