@@ -46,36 +46,41 @@
 
   <script>
     document.getElementById("startButton").addEventListener("click", async () => {
-      // Hide the button and show the camera container
-      document.getElementById("startButton").style.display = "none";
-      document.getElementById("container").style.display = "block";
+  try {
+    // Hide the button and show the camera container
+    document.getElementById("startButton").style.display = "none";
+    document.getElementById("container").style.display = "block";
 
-      // Initialize MindAR
-      const mindARThree = new window.MINDAR.IMAGE.MindARThree({
-        container: document.querySelector("#container"),
-        imageTargetSrc: "./marker.mind", // Your marker file
-      });
-
-      const { renderer, scene, camera } = mindARThree;
-
-      // Load a 3D model
-      const loader = new THREE.GLTFLoader();
-      loader.load('./model.glb', (gltf) => {
-        const model = gltf.scene;
-        model.scale.set(0.1, 0.1, 0.1); // Scale the model
-        model.position.set(0, 0, 0);
-
-        // Attach the model to the AR anchor
-        const anchor = mindARThree.addAnchor(0); // 0 is the marker index
-        anchor.group.add(model);
-      });
-
-      // Start the AR session
-      await mindARThree.start();
-      renderer.setAnimationLoop(() => {
-        renderer.render(scene, camera);
-      });
+    // Initialize MindAR
+    const mindARThree = new window.MINDAR.IMAGE.MindARThree({
+      container: document.querySelector("#container"),
+      imageTargetSrc: "./marker.mind", // Your marker file
     });
+
+    const { renderer, scene, camera } = mindARThree;
+
+    // Load a 3D model
+    const loader = new THREE.GLTFLoader();
+    loader.load('./model.glb', (gltf) => {
+      const model = gltf.scene;
+      model.scale.set(0.1, 0.1, 0.1);
+      model.position.set(0, 0, 0);
+
+      const anchor = mindARThree.addAnchor(0); // 0 is the marker index
+      anchor.group.add(model);
+    });
+
+    // Start the AR session
+    await mindARThree.start();
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+  } catch (error) {
+    console.error("Failed to start the AR session:", error);
+    alert("Could not open the camera. Please ensure your device has a working camera and permissions are granted.");
+  }
+});
+
   </script>
 </body>
 </html>
