@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Marker-based AR with Button</title>
+  <title>Marker-based AR with Camera</title>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.1/dist/mindar-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/examples/js/loaders/GLTFLoader.js"></script>
@@ -13,74 +13,65 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
+      background-color: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
     #container {
-      display: none;
       width: 100vw;
       height: 100vh;
       position: fixed;
       top: 0;
       left: 0;
-      z-index: 10;
-    }
-    #startButton {
-      display: block;
-      width: 200px;
-      margin: 100px auto;
-      padding: 10px 20px;
-      font-size: 18px;
-      color: white;
-      background-color: #007bff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #startButton:hover {
-      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
-  <button id="startButton">Open Camera</button>
   <div id="container"></div>
 
   <script>
-    document.getElementById("startButton").addEventListener("click", async () => {
-  try {
-    // Hide the button and show the camera container
-    document.getElementById("startButton").style.display = "none";
-    document.getElementById("container").style.display = "block";
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        // Automatically request camera access
+        console.log("Requesting camera access...");
 
-    // Initialize MindAR
-    const mindARThree = new window.MINDAR.IMAGE.MindARThree({
-      container: document.querySelector("#container"),
-      imageTargetSrc: "./marker.mind", // Your marker file
+        // Initialize MindAR
+        const mindARThree = new window.MINDAR.IMAGE.MindARThree({
+          container: document.querySelector("#container"),
+          imageTargetSrc: "./marker.mind", // Path to marker file
+        });
+
+        const { renderer, scene, camera } = mindARThree;
+
+        // Load the 3D model
+        const loader = new THREE.GLTFLoader();
+        loader.load('./model.glb', (gltf) => {
+          const model = gltf.scene;
+          model.scale.set(0.1, 0.1, 0.1); // Adjust scale
+          model.position.set(0, 0, 0);
+
+          // Attach the model to the AR anchor
+          const anchor = mindARThree.addAnchor(0); // 0 is the marker index
+          anchor.group.add(model);
+        });
+
+        // Start the AR session
+        console.log("Starting AR session...");
+        await mindARThree.start();
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
+
+        console.log("AR session started successfully!");
+      } catch (error) {
+        console.error("Failed to access the camera:", error);
+        alert(
+          "Could not open the camera. Please ensure your device has a working camera, and permissions are granted. Reload the page and try again."
+        );
+      }
     });
-
-    const { renderer, scene, camera } = mindARThree;
-
-    // Load a 3D model
-    const loader = new THREE.GLTFLoader();
-    loader.load('./model.glb', (gltf) => {
-      const model = gltf.scene;
-      model.scale.set(0.1, 0.1, 0.1);
-      model.position.set(0, 0, 0);
-
-      const anchor = mindARThree.addAnchor(0); // 0 is the marker index
-      anchor.group.add(model);
-    });
-
-    // Start the AR session
-    await mindARThree.start();
-    renderer.setAnimationLoop(() => {
-      renderer.render(scene, camera);
-    });
-  } catch (error) {
-    console.error("Failed to start the AR session:", error);
-    alert("Could not open the camera. Please ensure your device has a working camera and permissions are granted.");
-  }
-});
-
   </script>
 </body>
 </html>
