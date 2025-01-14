@@ -14,14 +14,17 @@
 
     <!-- AR.js Scene -->
     <a-scene embedded arjs>
-        <!-- Marker for QR Code -->
+        <!-- QR code marker to display when QR is detected -->
         <a-marker type="pattern" url="marker.patt">
             <!-- 3D model will be shown here when QR is scanned -->
             <a-entity gltf-model="url(model.glb)" scale="0.5 0.5 0.5" position="0 0 0"></a-entity>
         </a-marker>
 
         <!-- Camera -->
-        <a-camera position="0 0 0" fov="0"></a-camera>
+        <a-camera></a-camera>
+
+        <!-- Optional: QR scanning area (Visual indicator) -->
+        <a-entity position="0 0 -2" geometry="primitive: plane; width: 1; height: 1;" material="color: red; opacity: 0.5"></a-entity>
     </a-scene>
 
     <script>
