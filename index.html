@@ -87,7 +87,25 @@
         }
       }
 
+      async function requestCameraPermissions() {
+        try {
+          // Request access to the camera
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+          console.log("Camera access granted");
+          return stream;
+        } catch (error) {
+          console.error('Camera access denied or error:', error);
+          displayError("Camera access is required to proceed.");
+          return null;
+        }
+      }
+
       startButton.addEventListener('click', async () => {
+        // Step 1: Request camera permissions
+        const stream = await requestCameraPermissions();
+        if (!stream) return; // If no stream, don't continue
+
+        // Step 2: Hide button and show AR container
         startButton.style.display = 'none';
         container.style.display = 'block';
         errorMessage.style.display = 'none';
@@ -98,7 +116,7 @@
           // Initialize MindAR
           mindARThree = new MINDAR.IMAGE.MindARThree({
             container: container,
-            imageTargetSrc: '/marker.mind',
+            imageTargetSrc: '/marker.mind',  // Path to the marker file
           });
 
           const { renderer, scene, camera } = mindARThree;
@@ -110,7 +128,7 @@
           // Load the 3D model
           const loader = new THREE.GLTFLoader();
           loader.load(
-            '/model.glb',
+            '/model.glb',  // Path to your 3D model file
             (gltf) => {
               const model = gltf.scene;
               model.scale.set(0.1, 0.1, 0.1);
