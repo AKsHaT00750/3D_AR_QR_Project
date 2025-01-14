@@ -40,14 +40,22 @@
       top: 0;
       left: 0;
     }
+    #errorMessage {
+      display: none;
+      color: red;
+      margin-top: 10px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <button id="startButton">Open Camera</button>
+  <div id="errorMessage"></div>
   <div id="container"></div>
 
   <script>
     document.getElementById("startButton").addEventListener("click", async () => {
+      const errorMessageElement = document.getElementById("errorMessage");
       try {
         console.log("Requesting camera permissions...");
         let stream;
@@ -90,6 +98,9 @@
 
           const anchor = mindARThree.addAnchor(0);
           anchor.group.add(model);
+        }, undefined, (error) => {
+          console.error('Error loading 3D model:', error);
+          throw new Error('Failed to load 3D model');
         });
 
         console.log("Starting AR session...");
@@ -100,10 +111,11 @@
 
         console.log("AR session started successfully!");
       } catch (error) {
-        console.error("Error accessing the camera:", error);
-        alert(
-          "Could not access the camera. Please ensure permissions are granted and the device supports camera access."
-        );
+        console.error("Error in AR setup:", error);
+        errorMessageElement.textContent = `Error: ${error.message}. Please check console for more details.`;
+        errorMessageElement.style.display = "block";
+        document.getElementById("startButton").style.display = "block";
+        document.getElementById("container").style.display = "none";
       }
     });
   </script>
