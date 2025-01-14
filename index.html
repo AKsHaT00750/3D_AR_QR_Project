@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Marker-based AR with Camera</title>
+  <title>Marker-based AR with Permission Request</title>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.1/dist/mindar-viewer.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.139.2/examples/js/loaders/GLTFLoader.js"></script>
@@ -19,7 +19,21 @@
       align-items: center;
       height: 100vh;
     }
+    #startButton {
+      display: block;
+      padding: 15px 30px;
+      font-size: 18px;
+      color: white;
+      background-color: #007bff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #startButton:hover {
+      background-color: #0056b3;
+    }
     #container {
+      display: none;
       width: 100vw;
       height: 100vh;
       position: fixed;
@@ -29,23 +43,30 @@
   </style>
 </head>
 <body>
+  <button id="startButton">Open Camera</button>
   <div id="container"></div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", async () => {
+    document.getElementById("startButton").addEventListener("click", async () => {
       try {
-        // Automatically request camera access
-        console.log("Requesting camera access...");
+        // Request camera permissions
+        console.log("Requesting camera permissions...");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop()); // Close the stream as we just needed permission
+
+        // Hide the button and show the camera container
+        document.getElementById("startButton").style.display = "none";
+        document.getElementById("container").style.display = "block";
 
         // Initialize MindAR
         const mindARThree = new window.MINDAR.IMAGE.MindARThree({
           container: document.querySelector("#container"),
-          imageTargetSrc: "./marker.mind", // Path to marker file
+          imageTargetSrc: "./marker.mind", // Path to your marker file
         });
 
         const { renderer, scene, camera } = mindARThree;
 
-        // Load the 3D model
+        // Load a 3D model
         const loader = new THREE.GLTFLoader();
         loader.load('./model.glb', (gltf) => {
           const model = gltf.scene;
@@ -66,10 +87,8 @@
 
         console.log("AR session started successfully!");
       } catch (error) {
-        console.error("Failed to access the camera:", error);
-        alert(
-          "Could not open the camera. Please ensure your device has a working camera, and permissions are granted. Reload the page and try again."
-        );
+        console.error("Error accessing the camera:", error);
+        alert("Could not access the camera. Please ensure permissions are granted and try again.");
       }
     });
   </script>
